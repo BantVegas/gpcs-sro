@@ -2,6 +2,7 @@
 'use client';
 
 import {
+  use,
   useMemo,
   useState,
   useCallback,
@@ -105,8 +106,9 @@ const FALLBACK_PRINT_ITEMS = [
   "Klientsky portál & schvaľovanie nátlačkov",
 ];
 
-export default function GpcsLanding({ params }: { params: { locale: Locale } }) {
-  const lang: Locale = (params?.locale ?? "sk") as Locale;
+export default function GpcsLanding({ params }: { params: Promise<{ locale: Locale }> }) {
+  const { locale } = use(params);
+  const lang: Locale = (locale ?? "sk") as Locale;
   const messages = MESSAGES[lang] ?? MESSAGES.sk;
 
   // t() teraz podporuje aj fallback
@@ -185,11 +187,6 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
     }
   }
 
-  // výrazne blikajúca položka „Novinka“
-  const blinkNav = prefersReducedMotion
-    ? undefined
-    : { opacity: [1, 0.5, 1], transition: { duration: 1.2, repeat: Infinity, ease: "easeInOut" as const } };
-
   // SILNÉ blikanie motta (vpravo hore)
   const blinkMotto = prefersReducedMotion
     ? undefined
@@ -228,7 +225,6 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
                 <nav className="hidden md:flex items-center gap-1 text-sm">
                   <NavLink href="#produkty">{t("nav.products")}</NavLink>
                   <NavLink href="#codestudio">CodeStudio</NavLink>
-                  <m.a href="#novinka" className="px-4 py-2 rounded-lg hover:bg-white/5 transition-colors text-slate-300 hover:text-white" animate={blinkNav}>{t("nav.news")}</m.a>
                   <NavLink href="#prinosy">{t("nav.benefits")}</NavLink>
                                     <NavLink href="#kontakt">{t("nav.contact")}</NavLink>
                   <LangSwitcher className="ml-2" />
@@ -259,7 +255,6 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
               <div className="grid gap-1">
                 <a onClick={closeMenu} href="#produkty" className="block rounded-lg px-3 py-3 hover:bg-cyan-400/10 transition-colors">{t("nav.products")}</a>
                 <a onClick={closeMenu} href="#codestudio" className="block rounded-lg px-3 py-3 hover:bg-cyan-400/10 transition-colors text-cyan-400">CodeStudio</a>
-                <m.a onClick={closeMenu} href="#novinka" className="block rounded-lg px-3 py-3 hover:bg-cyan-400/10 transition-colors" animate={blinkNav}>{t("nav.news")}</m.a>
                 <a onClick={closeMenu} href="#prinosy" className="block rounded-lg px-3 py-3 hover:bg-cyan-400/10 transition-colors">{t("nav.benefits")}</a>
                                 <a onClick={closeMenu} href="#kontakt" className="block rounded-lg px-3 py-3 hover:bg-cyan-400/10 transition-colors">{t("nav.contact")}</a>
               </div>
@@ -286,19 +281,6 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
           </div>
 
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative z-10">
-            {/* Badge */}
-            <m.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex justify-center mb-8"
-            >
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 text-sm text-cyan-300">
-                <Printer className="size-4" />
-                {t("badge")}
-              </span>
-            </m.div>
-
             {/* Main headline */}
             <m.div
               initial={{ opacity: 0, y: 30 }}
@@ -330,28 +312,6 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
               <p className="mt-4 text-base sm:text-lg font-medium text-cyan-300">
                 {t("hero.digital")}
               </p>
-            </m.div>
-
-            {/* CTA Buttons */}
-            <m.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="mt-10 flex flex-wrap justify-center gap-4"
-            >
-              <a
-                href="#demo"
-                className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all hover:scale-105"
-              >
-                {t("hero.ctaDemo")}
-                <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
-              </a>
-              <a
-                href="#produkty"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
-              >
-                {t("hero.ctaProducts")}
-              </a>
             </m.div>
 
             {/* Stats/Features row */}
@@ -451,7 +411,7 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
         </section>
 
         {/* Produkty */}
-        <section id="produkty" className="scroll-mt-24 py-12 sm:py-16">
+        <section id="produkty" className="scroll-mt-20 pt-20 pb-12 sm:pb-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">{t("products.title")}</h2>
             <p className="mt-2 text-slate-300 max-w-3xl">{t("products.lead")}</p>
@@ -459,110 +419,18 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
             <div className="mt-8 grid gap-10 md:grid-cols-2">
               <div>
                 <ProductCard badge="Scancontroll" title={t("products.scan.title")} desc={t("products.scan.desc")} features={featuresScan} />
-                <div className="mt-4">
-                  <m.a
-                    href="https://youtu.be/x982OFN7b1c"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm text-white shadow-[0_0_16px_rgba(34,211,238,0.25)] hover:bg-cyan-400/20 hover:border-cyan-300/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
-                    initial={{ opacity: 0.95, scale: 1 }}
-                    animate={{ opacity: [1, 0.78, 1], scale: [1, 1.02, 1] }}
-                    transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {t("links.scanVideo")}
-                  </m.a>
-                </div>
               </div>
 
               <div>
                 <ProductCard badge="MaintControl" title={t("products.maint.title")} desc={t("products.maint.desc")} features={featuresMaint} />
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <m.a
-                    href="https://youtu.be/MupquW0d2Gk"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm text-white shadow-[0_0_16px_rgba(34,211,238,0.25)] hover:bg-cyan-400/20 hover:border-cyan-300/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
-                    initial={{ opacity: 0.95, scale: 1 }}
-                    animate={{ opacity: [1, 0.78, 1], scale: [1, 1.02, 1] }}
-                    transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {t("links.maintMobile")}
-                  </m.a>
-                  <m.a
-                    href="https://youtu.be/SiQ-EJXkXh0"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm text-white shadow-[0_0_16px_rgba(34,211,238,0.25)] hover:bg-cyan-400/20 hover:border-cyan-300/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
-                    initial={{ opacity: 0.95, scale: 1 }}
-                    animate={{ opacity: [1, 0.78, 1], scale: [1, 1.02, 1] }}
-                    transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut", delay: 0.35 }}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {t("links.maintKpi")}
-                  </m.a>
-                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* NOVINKA: KIOSK */}
-        <section id="novinka" className="scroll-mt-24 py-12 sm:py-16 border-y border-white/10 bg-white/5">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-6 md:grid md:grid-cols-2 md:items-start">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-200">
-                  {t("nav.news")}
-                </span>
-                <h2 className="mt-3 text-2xl sm:text-3xl font-semibold tracking-tight">{t("news.kiosk.title")}</h2>
-                <p className="mt-2 text-slate-300">{t("news.kiosk.p1")}</p>
-
-                <div className="mt-4 space-y-2 text-slate-300">
-                  <h3 className="font-semibold text-white">{t("news.kiosk.pgTitle")}</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>{t("news.kiosk.pg1")}</li>
-                    <li>{t("news.kiosk.pg2")}</li>
-                    <li>{t("news.kiosk.pg3")}</li>
-                  </ul>
-                  <h3 className="mt-3 font-semibold text-white">{t("news.kiosk.entryTitle")}</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>{t("news.kiosk.en1")}</li>
-                    <li>{t("news.kiosk.en2")}</li>
-                    <li>{t("news.kiosk.en3")}</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div>
-                <div className="aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-lg">
-                  <iframe
-                    className="w-full h-full"
-                    src="https://www.youtube.com/embed/WHG9FbVTPNk"
-                    title={t("news.kiosk.title")}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                  />
-                </div>
-                <p className="mt-3 text-sm text-slate-300">
-                  {t("news.kiosk.ytPrompt")}{" "}
-                  <a href="https://youtu.be/WHG9FbVTPNk" target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-white">
-                    {t("news.kiosk.ytOpen")}
-                  </a>
-                  .
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* CODESTUDIO Section */}
-        <section id="codestudio" className="scroll-mt-24 py-16 sm:py-24 relative overflow-hidden">
+        <section id="codestudio" className="scroll-mt-20 pt-20 pb-16 sm:pb-24 relative overflow-hidden">
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/50 to-slate-950" />
           <div className="absolute inset-0 halftone-pattern opacity-30" />
@@ -574,10 +442,6 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-fuchsia-400/30 bg-fuchsia-400/10 text-sm text-fuchsia-300 mb-4">
-                <Code2 className="size-4" />
-                Vývoj na mieru
-              </span>
               <h2 className="text-3xl sm:text-5xl font-bold">
                 <span className="gradient-text">CodeStudio</span>
               </h2>
@@ -632,23 +496,6 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
               />
             </div>
 
-            {/* Tech Stack */}
-            <m.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mt-16 text-center"
-            >
-              <p className="text-sm text-slate-500 mb-6">Technológie, ktoré používame</p>
-              <div className="flex flex-wrap justify-center gap-4">
-                {["React", "Next.js", "TypeScript", "Python", "Node.js", "PostgreSQL", "Docker", "AWS", "Vercel"].map((tech) => (
-                  <span key={tech} className="px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-sm text-slate-300 hover:border-cyan-400/30 hover:bg-cyan-400/5 transition-colors">
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </m.div>
-
             {/* CTA */}
             <m.div
               initial={{ opacity: 0, y: 20 }}
@@ -669,7 +516,7 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
         </section>
 
         {/* PRÍNOSY - Modernized */}
-        <section id="prinosy" className="scroll-mt-24 py-16 sm:py-24">
+        <section id="prinosy" className="scroll-mt-20 pt-20 pb-16 sm:pb-24">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <m.div
               initial={{ opacity: 0, y: 20 }}
@@ -703,7 +550,7 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
         </section>
 
         {/* Demo CTA */}
-        <section id="demo" className="scroll-mt-24 py-12 sm:py-16 border-y border-white/10 bg-gradient-to-br from-slate-900 to-slate-950">
+        <section id="demo" className="scroll-mt-20 pt-20 pb-12 sm:pb-16 border-y border-white/10 bg-gradient-to-br from-slate-900 to-slate-950">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-8 md:grid-cols-2 items-center">
               <div>
@@ -760,7 +607,7 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
         </section>
 
         {/* Footer - Modern */}
-        <footer id="kontakt" className="scroll-mt-24 py-16 border-t border-white/10 relative">
+        <footer id="kontakt" className="scroll-mt-20 pt-20 pb-16 border-t border-white/10 relative">
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none" />
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid gap-10 md:grid-cols-4">
@@ -785,7 +632,6 @@ export default function GpcsLanding({ params }: { params: { locale: Locale } }) 
                   <li><a href="#produkty" className="hover:text-cyan-400 transition-colors">Scancontroll</a></li>
                   <li><a href="#produkty" className="hover:text-cyan-400 transition-colors">MaintControl</a></li>
                   <li><a href="#codestudio" className="hover:text-cyan-400 transition-colors">CodeStudio</a></li>
-                  <li><a href="#novinka" className="hover:text-cyan-400 transition-colors">KIOSK</a></li>
                 </ul>
               </div>
 
